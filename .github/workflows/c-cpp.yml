@@ -16,7 +16,7 @@ jobs:
     - name: Setup ARM emulation for Raspberry Pi 4 Bookworm
       uses: pguyot/arm-runner-action@v2
       with:
-        base_image: raspi_4_bookworm:20230612
+        base_image: raspi_4_bookworm
         cpu: cortex-a53
         cpu_info: cpuinfo/raspberrypi_4b
         copy_repository_path: /opt/project

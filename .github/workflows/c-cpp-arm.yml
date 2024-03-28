@@ -1,36 +1,36 @@
-name: CI
+name: ARM CI for Raspberry Pi 4 Bookworm
 
 on:
   push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
-  qemu:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: debian/debian-bookworm-rpi4:latest
-          build-args: |
-            VERSION=bookworm
-            
-      - name: Run container
-        run: docker run --rm yourusername/debian-bookworm-rpi4:latest /bin/bash -c "/bin/bash"
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup ARM emulation for Raspberry Pi 4 Bookworm
+      uses: pguyot/arm-runner-action@v2
+      with:
+        base_image: raspi_4_bookworm:20230612
+        cpu: cortex-a53
+        cpu_info: cpuinfo/raspberrypi_4b
+        copy_repository_path: /opt/project
+        commands: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-image-dev libglib2.0-dev libcurl4-openssl-dev libgps-dev
+          # Clone and build SDL_gpu as an example of building a dependency from source
+          git clone https://github.com/grimfang4/sdl-gpu.git sdl-gpu
+          cd sdl-gpu
+          cmake -G "Unix Makefiles"
+          make
+          sudo make install
+          # Build your project here
+          cd /opt/project
+          # Assuming configure script is available
+          ./configure
+          make

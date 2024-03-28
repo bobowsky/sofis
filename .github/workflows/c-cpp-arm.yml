@@ -32,7 +32,7 @@ jobs:
       - name: Run Emulated RPi 4 and Print Hello World
         run: |
           echo '#!/usr/bin/env bash' > ~/Projects/rpitest/rpistart.sh
-          echo 'sudo qemu-system-aarch64 -M virt -m 1G -cpu cortex-a72 -kernel ~/Projects/rpitest/kernel-qemu -drive file=~/Projects/rpitest/rpitest.qcow2,format=qcow2 -net nic -net user -dtb ~/Projects/rpitest/versatile-pb.dtb -serial stdio -append "root=/dev/vda2 panic=1 rootfstype=ext4 rw" -no-reboot' >> ~/Projects/rpitest/rpistart.sh
+          echo 'sudo qemu-system-aarch64 -M virt -m 1G -cpu cortex-a72 -kernel ~/Projects/rpitest/kernel-qemu -drive file=~/Projects/rpitest/rpitest.qcow2,format=qcow2 -net nic -net user -dtb ~/Projects/rpitest/versatile-pb.dtb -serial stdio -append "root=/dev/vda2 panic=1 rootfstype=ext4 rw" -no-reboot -nographic' >> ~/Projects/rpitest/rpistart.sh
           chmod +x ~/Projects/rpitest/rpistart.sh
           (cd ~/Projects/rpitest && ./rpistart.sh &) | grep -m1 "Raspberry Pi OS"
           echo "Hello World"

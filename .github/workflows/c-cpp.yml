@@ -18,7 +18,13 @@ jobs:
         sudo apt-get install -y libsdl2-dev libsdl2-image-dev libglib2.0-dev libcurl4-openssl-dev libgps-dev
         # Assuming SDL_gpu needs to be installed from source or an external repository
         # For SDL_gpu, add the specific installation steps here. This might involve adding a PPA, downloading the source, and compiling.
-
+    - name: Install SDL_gpu
+      run: |
+        git clone https://github.com/grimfang4/sdl-gpu.git sdl-gpu
+        cd sdl-gpu
+        cmake -G "Unix Makefiles"
+        make
+        sudo make install
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh

@@ -1,0 +1,41 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsdl2-dev libsdl2-image-dev libglib2.0-dev libcurl4-openssl-dev libgps-dev
+        # Assuming SDL_gpu needs to be installed from source or an external repository
+        # For SDL_gpu, add the specific installation steps here. This might involve adding a PPA, downloading the source, and compiling.
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan github.com >> ~/.ssh/known_hosts 
+    - name: Initialize and update git submodules
+      run: git submodule update --init --recursive
+    - name: Configure sdl-pcf
+      run: |
+        cd sdl-pcf
+        autoreconf -i
+        ./configure --with-texture=sdl_gpu
+        cd ..
+    - name: Download and extract media
+      run: |
+        wget https://github.com/sam-itt/fg-roam/archive/media.tar.gz
+        tar -xf media.tar.gz --strip-components=1 -C fg-roam/
+    - name: Build
+      run: make

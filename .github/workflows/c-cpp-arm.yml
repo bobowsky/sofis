@@ -1,4 +1,4 @@
-name: Emulate RPi and Print Hello World
+name: Emulate RPi 4 and Print Hello World
 
 on: 
   push:
@@ -14,28 +14,25 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Install qemu-system-arm
-        run: sudo apt-get update && sudo apt-get install -y qemu-system-arm
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-arm qemu-efi-aarch64 qemu-utils
 
-      - name: Prepare emulation environment
+      - name: Prepare emulation environment for RPi 4
         run: |
           mkdir -p ~/Projects/rpitest
           git clone https://github.com/dhruvvyas90/qemu-rpi-kernel.git ~/qemu-rpi-kernel
-          # Assuming using default kernel and dtb files
-          cp ~/qemu-rpi-kernel/kernel-qemu-4.19.50-buster ~/Projects/rpitest/kernel-qemu
+          # Use a kernel and dtb suitable for RPi 4 emulation
+          cp ~/qemu-rpi-kernel/kernel-qemu-5.4.51-buster ~/Projects/rpitest/kernel-qemu
           cp ~/qemu-rpi-kernel/versatile-pb.dtb ~/Projects/rpitest/
-          # Download and prepare Raspbian image - this step would require you to host your image somewhere accessible
-          curl -L -o ~/Projects/rpitest/raspbian-stretch.img 'URL_TO_YOUR_RASPBIAN_IMAGE'
-          OFFSET=$(sudo fdisk -l ~/Projects/rpitest/raspbian-stretch.img | grep Linux | awk '{print $2 * 512}')
-          sudo mount -o offset=$OFFSET ~/Projects/rpitest/raspbian-stretch.img /mnt
-          sudo sed -i 's/^/#/' /mnt/etc/ld.so.preload
-          sudo umount /mnt
-          mv ~/Projects/rpitest/raspbian-stretch.img ~/Projects/rpitest/rpitest.img
+          # Download and prepare Raspberry Pi OS Lite image
+          curl -L -o ~/Projects/rpitest/raspios-lite-arm64.img.xz 'https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-03-15/2024-03-15-raspios-bookworm-arm64-lite.img.xz'
+          xz -d ~/Projects/rpitest/raspios-lite-arm64.img.xz
+          mv ~/Projects/rpitest/raspios-lite-arm64.img ~/Projects/rpitest/rpitest.img
           qemu-img convert -f raw -O qcow2 ~/Projects/rpitest/rpitest.img ~/Projects/rpitest/rpitest.qcow2
 
-      - name: Run Emulated RPi and Print Hello World
+      - name: Run Emulated RPi 4 and Print Hello World
         run: |
           echo '#!/usr/bin/env bash' > ~/Projects/rpitest/rpistart.sh
-          echo 'sudo qemu-system-arm -kernel ~/Projects/rpitest/kernel-qemu -cpu arm1176 -m 256 -M versatilepb -dtb ~/Projects/rpitest/versatile-pb.dtb -no-reboot -serial stdio -append "root=/dev/sda2 panic=1 rootfstype=ext4 rw" -hda ~/Projects/rpitest/rpitest.qcow2 -net nic -net user -net tap,ifname=vnet0,script=no,downscript=no' >> ~/Projects/rpitest/rpistart.sh
+          echo 'sudo qemu-system-aarch64 -M virt -m 1G -cpu cortex-a72 -kernel ~/Projects/rpitest/kernel-qemu -drive file=~/Projects/rpitest/rpitest.qcow2,format=qcow2 -net nic -net user -dtb ~/Projects/rpitest/versatile-pb.dtb -serial stdio -append "root=/dev/vda2 panic=1 rootfstype=ext4 rw" -no-reboot' >> ~/Projects/rpitest/rpistart.sh
           chmod +x ~/Projects/rpitest/rpistart.sh
-          (cd ~/Projects/rpitest && ./rpistart.sh &) | grep -m1 "Raspbian GNU/Linux"
+          (cd ~/Projects/rpitest && ./rpistart.sh &) | grep -m1 "Raspberry Pi OS"
           echo "Hello World"

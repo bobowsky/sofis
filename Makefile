@@ -30,6 +30,7 @@ CFLAGS=$(OPT_CFLAGS) `pkg-config glib-2.0 sdl2 SDL2_image libgps --cflags` \
 	   -I$(BNO080) \
 	   -I$(CGLM) \
 	   -I$(FG_ROAM)/src \
+           -I/usr/local/include/SDL2/ \
 	   -DUSE_SGPU_TEXTURE=1 \
 	   -DUSE_SDL_GPU=1 \
 	   -DENABLE_DEBUG_TRIANGLE=0 \
